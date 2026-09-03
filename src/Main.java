@@ -5,12 +5,23 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
+
 public class Main {
+
+    private static final Router router = new Router();
+
     public static void main(String[] args) throws Exception {
 
         ServerSocket serverSocket = new ServerSocket(8080);
 
         System.out.println("서버 실행 http://localhost:8080");
+
+        router.get("/hello", () -> {
+            System.out.println("Hello 받음");
+            return "Hello";
+        });
+        router.get("/users", () -> "User List");
+        router.get("/info", () -> "당신의 정보입니다.");
 
         while (true) {
 
@@ -44,28 +55,7 @@ public class Main {
                 }
             }
 
-            String body;
-            String status;
-
-            if (method.equals("GET") && path.equals("/hello")) {
-                status = "200 OK";
-                body = "Hello";
-
-            } else if (method.equals("GET") && path.equals("/users")) {
-                status = "200 OK";
-                body = "User List";
-            } else {
-                status = "404 Not Found";
-                body = "Not Found";
-            }
-
-            byte[] bodyBytes = body.getBytes(StandardCharsets.UTF_8);
-
-            String response =
-                    "HTTP/1.1 " + status + "\r\n" +
-                            "Content-Type: text/plain; charset=UTF-8\r\n" +
-                            "Content-Length: " + bodyBytes.length + "\r\n" +
-                            "\r\n" + body;
+            String response = getResponse(method, path);
 
             OutputStream out = socket.getOutputStream();
 
@@ -77,5 +67,29 @@ public class Main {
 
             socket.close();
         }
+    }
+
+    private static String getResponse(String method, String path) {
+
+        Handler handler = router.find(path);
+
+        String status;
+        String body;
+
+        if (handler == null) {
+            status = "404 Not Found";
+            body = "404 Not Found";
+        } else {
+            status = "200 OK";
+            body = handler.handle();
+        }
+
+
+        byte[] bodyBytes = body.getBytes(StandardCharsets.UTF_8);
+
+        return "HTTP/1.1 " + status + "\r\n" +
+                "Content-Type: text/plain; charset=UTF-8\r\n" +
+                "Content-Length: " + bodyBytes.length + "\r\n" +
+                "\r\n" + body;
     }
 }
