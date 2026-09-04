@@ -1,9 +1,12 @@
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class Main {
@@ -14,48 +17,68 @@ public class Main {
 
         ServerSocket serverSocket = new ServerSocket(8080);
 
+
         System.out.println("서버 실행 http://localhost:8080");
 
-        router.get("/hello", () -> {
+        router.get("/hello", request -> {
             System.out.println("Hello 받음");
             return "Hello";
         });
-        router.get("/users", () -> "User List");
-        router.get("/info", () -> "당신의 정보입니다.");
+        router.get("/users", request -> "User List");
+        router.get("/info", request -> "당신의 정보입니다.");
+        router.post("/users", request -> {
+            System.out.println(request);
+            return "데이터가 추가되었습니다.";
+        });
 
         while (true) {
 
             Socket socket = serverSocket.accept();
 
-            BufferedReader reader =
-                    new BufferedReader(
-                            new InputStreamReader(
-                                    socket.getInputStream()
-                            )
-                    );
+            InputStream input = socket.getInputStream();
 
-            String requestLine = reader.readLine();
+            String headers = readHeaders(input);
 
-            if (requestLine == null) {
-                socket.close();
-                continue;
-            }
+            String[] lines = headers.split("\r\n");
 
-            System.out.println("Request: " + requestLine);
 
-            String[] parts = requestLine.split(" ");
+            String[] requestParts = lines[0].split(" ");
 
-            String method = parts[0];
-            String path = parts[1];
+            Map<String, String> headerData = new HashMap<>();
+
+            String method = requestParts[0];
+            String path = requestParts[1];
             String line;
 
-            while ((line = reader.readLine()) != null) {
-                if (line.isEmpty()) {
-                    break;
+            int contentLength = 0;
+
+            for (String header : lines) {
+                System.out.println("헤더" + header.split(":")[0] + "@@@");
+//                headerData.put()
+                if (header.startsWith("Content-Length:")) {
+
+                    String value =
+                            header.substring("Content-Length:".length())
+                                    .trim();
+
+                    contentLength = Integer.parseInt(value);
                 }
             }
 
-            String response = getResponse(method, path);
+            byte[] bodyBytes =
+                    input.readNBytes(contentLength);
+
+            String requestBody =
+                    new String(
+                            bodyBytes,
+                            StandardCharsets.UTF_8
+                    );
+
+            System.out.println("method = " + method);
+            System.out.println("path = " + path);
+            System.out.println("body = " + requestBody);
+
+            String response = getResponse(method, path, requestBody);
 
             OutputStream out = socket.getOutputStream();
 
@@ -69,9 +92,35 @@ public class Main {
         }
     }
 
-    private static String getResponse(String method, String path) {
+    private static String readHeaders(InputStream input) throws IOException {
 
-        Handler handler = router.find(path);
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+        int b;
+
+        while ((b = input.read()) != -1) {
+
+            buffer.write(b);
+
+            byte[] data = buffer.toByteArray();
+            int length = data.length;
+
+            if (length >= 4 &&
+                    data[length - 4] == '\r' &&
+                    data[length - 3] == '\n' &&
+                    data[length - 2] == '\r' &&
+                    data[length - 1] == '\n') {
+
+                break;
+            }
+        }
+
+        return buffer.toString(StandardCharsets.UTF_8);
+    }
+
+    private static String getResponse(String method, String path, String requestBody) {
+
+        Handler handler = router.find(method, path);
 
         String status;
         String body;
@@ -81,7 +130,8 @@ public class Main {
             body = "404 Not Found";
         } else {
             status = "200 OK";
-            body = handler.handle();
+            body = "hello";
+//            body = handler.handle(new HttpRequest(method,path,));
         }
 
 
