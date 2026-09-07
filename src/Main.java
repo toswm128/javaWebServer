@@ -53,17 +53,12 @@ public class Main {
             int contentLength = 0;
 
             for (String header : lines) {
-                System.out.println("헤더" + header.split(":")[0] + "@@@");
-//                headerData.put()
-                if (header.startsWith("Content-Length:")) {
-
-                    String value =
-                            header.substring("Content-Length:".length())
-                                    .trim();
-
-                    contentLength = Integer.parseInt(value);
+                String[] headerSplit = header.split(":");
+                if (!headerSplit[0].isEmpty()) {
+                    headerData.put(headerSplit[0], header.substring(headerSplit[0].length()).trim());
                 }
             }
+
 
             byte[] bodyBytes =
                     input.readNBytes(contentLength);
@@ -78,7 +73,15 @@ public class Main {
             System.out.println("path = " + path);
             System.out.println("body = " + requestBody);
 
-            String response = getResponse(method, path, requestBody);
+            HttpRequest request =
+                    new HttpRequest(
+                            method,
+                            path,
+                            headerData,
+                            requestBody
+                    );
+
+            String response = getResponse(request);
 
             OutputStream out = socket.getOutputStream();
 
@@ -118,9 +121,13 @@ public class Main {
         return buffer.toString(StandardCharsets.UTF_8);
     }
 
-    private static String getResponse(String method, String path, String requestBody) {
+    private static String getResponse(HttpRequest request) {
 
-        Handler handler = router.find(method, path);
+        Handler handler =
+                router.find(
+                        request.method(),
+                        request.path()
+                );
 
         String status;
         String body;
@@ -130,16 +137,16 @@ public class Main {
             body = "404 Not Found";
         } else {
             status = "200 OK";
-            body = "hello";
-//            body = handler.handle(new HttpRequest(method,path,));
+            body = handler.handle(request);
         }
 
-
-        byte[] bodyBytes = body.getBytes(StandardCharsets.UTF_8);
+        byte[] bodyBytes =
+                body.getBytes(StandardCharsets.UTF_8);
 
         return "HTTP/1.1 " + status + "\r\n" +
                 "Content-Type: text/plain; charset=UTF-8\r\n" +
                 "Content-Length: " + bodyBytes.length + "\r\n" +
-                "\r\n" + body;
+                "\r\n" +
+                body;
     }
 }
