@@ -1,3 +1,5 @@
+import com.sun.net.httpserver.Headers;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -5,13 +7,19 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 
 public class Main {
 
     private static final Router router = new Router();
+
+    public static List<User> userList = new ArrayList<>(Arrays.asList(
+            new User(1, "조민수"),
+            new User(2, "황제원"),
+            new User(3, "서은건")
+    ));
+
 
     public static void main(String[] args) throws Exception {
 
@@ -19,47 +27,49 @@ public class Main {
 
 
         System.out.println("서버 실행 http://localhost:8080");
+        System.out.println(new Headers());
+        router.get("/users", request -> {
+            int status = 200;
+            StringBuilder body = new StringBuilder();
+            for (User i : userList) {
+                body.append(i.getUserName()).append("\r\n");
+            }
 
-        router.get("/hello", request -> {
-            System.out.println("Hello 받음");
-            return "Hello";
+            return buildResponse(status, String.valueOf(body));
         });
-        router.get("/users", request -> "User List");
-        router.get("/info", request -> "당신의 정보입니다.");
         router.post("/users", request -> {
-            System.out.println(request);
-            return "데이터가 추가되었습니다.";
+            System.out.println(request.body());
+            return buildResponse(200, "body");
         });
 
         while (true) {
-
             Socket socket = serverSocket.accept();
-
             InputStream input = socket.getInputStream();
 
             String headers = readHeaders(input);
-
-            String[] lines = headers.split("\r\n");
-
-
-            String[] requestParts = lines[0].split(" ");
-
+            String[] headerLines = headers.split("\r\n");
+            String[] requestParts = headerLines[0].split(" ");
             Map<String, String> headerData = new HashMap<>();
-
             String method = requestParts[0];
             String path = requestParts[1];
-            String line;
-
             int contentLength = 0;
 
-            for (String header : lines) {
-                String[] headerSplit = header.split(":");
-                if (!headerSplit[0].isEmpty()) {
-                    headerData.put(headerSplit[0], header.substring(headerSplit[0].length()).trim());
+//            헤더 MAP 만들기
+            for (String header : headerLines) {
+                if (header.contains(":")) {
+                    int colonIndex = header.indexOf(':');
+                    if (colonIndex >= 0) {
+                        headerData.put(header.substring(0, colonIndex), header.substring(colonIndex + 1).trim());
+                    }
                 }
             }
 
+            String contentLengthHeader = headerData.get("Content-Length");
 
+//          body 받기
+            if (contentLengthHeader != null) {
+                contentLength = Integer.parseInt(contentLengthHeader);
+            }
             byte[] bodyBytes =
                     input.readNBytes(contentLength);
 
@@ -68,10 +78,6 @@ public class Main {
                             bodyBytes,
                             StandardCharsets.UTF_8
                     );
-
-            System.out.println("method = " + method);
-            System.out.println("path = " + path);
-            System.out.println("body = " + requestBody);
 
             HttpRequest request =
                     new HttpRequest(
@@ -121,6 +127,84 @@ public class Main {
         return buffer.toString(StandardCharsets.UTF_8);
     }
 
+    private static HttpResponse buildResponse(int status, String body) {
+        String statusText = "";
+        switch (status) {
+            case 100 -> statusText = "Continue";
+            case 101 -> statusText = "Switching Protocols";
+            case 102 -> statusText = "Processing";
+            case 103 -> statusText = "Early Hints";
+            case 104 -> statusText = "Upload Resumption Supported";
+
+            case 200 -> statusText = "OK";
+            case 201 -> statusText = "Created";
+            case 202 -> statusText = "Accepted";
+            case 203 -> statusText = "Non-Authoritative Information";
+            case 204 -> statusText = "No Content";
+            case 205 -> statusText = "Reset Content";
+            case 206 -> statusText = "Partial Content";
+            case 207 -> statusText = "Multi-Status";
+            case 208 -> statusText = "Already Reported";
+            case 226 -> statusText = "IM Used";
+
+            case 300 -> statusText = "Multiple Choices";
+            case 301 -> statusText = "Moved Permanently";
+            case 302 -> statusText = "Found";
+            case 303 -> statusText = "See Other";
+            case 304 -> statusText = "Not Modified";
+            case 305 -> statusText = "Use Proxy";
+            case 306 -> statusText = "Unused";
+            case 307 -> statusText = "Temporary Redirect";
+            case 308 -> statusText = "Permanent Redirect";
+
+            case 400 -> statusText = "Bad Request";
+            case 401 -> statusText = "Unauthorized";
+            case 402 -> statusText = "Payment Required";
+            case 403 -> statusText = "Forbidden";
+            case 404 -> statusText = "Not Found";
+            case 405 -> statusText = "Method Not Allowed";
+            case 406 -> statusText = "Not Acceptable";
+            case 407 -> statusText = "Proxy Authentication Required";
+            case 408 -> statusText = "Request Timeout";
+            case 409 -> statusText = "Conflict";
+            case 410 -> statusText = "Gone";
+            case 411 -> statusText = "Length Required";
+            case 412 -> statusText = "Precondition Failed";
+            case 413 -> statusText = "Content Too Large";
+            case 414 -> statusText = "URI Too Long";
+            case 415 -> statusText = "Unsupported Media Type";
+            case 416 -> statusText = "Range Not Satisfiable";
+            case 417 -> statusText = "Expectation Failed";
+            case 418 -> statusText = "Unused";
+            case 421 -> statusText = "Misdirected Request";
+            case 422 -> statusText = "Unprocessable Content";
+            case 423 -> statusText = "Locked";
+            case 424 -> statusText = "Failed Dependency";
+            case 425 -> statusText = "Too Early";
+            case 426 -> statusText = "Upgrade Required";
+            case 428 -> statusText = "Precondition Required";
+            case 429 -> statusText = "Too Many Requests";
+            case 431 -> statusText = "Request Header Fields Too Large";
+            case 451 -> statusText = "Unavailable For Legal Reasons";
+
+            case 500 -> statusText = "Internal Server Error";
+            case 501 -> statusText = "Not Implemented";
+            case 502 -> statusText = "Bad Gateway";
+            case 503 -> statusText = "Service Unavailable";
+            case 504 -> statusText = "Gateway Timeout";
+            case 505 -> statusText = "HTTP Version Not Supported";
+            case 506 -> statusText = "Variant Also Negotiates";
+            case 507 -> statusText = "Insufficient Storage";
+            case 508 -> statusText = "Loop Detected";
+            case 510 -> statusText = "Not Extended";
+            case 511 -> statusText = "Network Authentication Required";
+
+            default -> statusText = "Unknown Status";
+        }
+
+        return new HttpResponse(status, statusText, new HttpHeaders(body), body);
+    }
+
     private static String getResponse(HttpRequest request) {
 
         Handler handler =
@@ -136,8 +220,9 @@ public class Main {
             status = "404 Not Found";
             body = "404 Not Found";
         } else {
-            status = "200 OK";
-            body = handler.handle(request);
+            HttpResponse response = handler.handle(request);
+            status = response.status() + response.statusText();
+            body = response.body();
         }
 
         byte[] bodyBytes =

@@ -1,4 +1,4 @@
 public interface Handler {
-    String handle(HttpRequest httpRequest);
+    HttpResponse handle(HttpRequest httpRequest);
 }
 
