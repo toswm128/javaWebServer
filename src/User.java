@@ -5,15 +5,15 @@ public class User {
         setUserName(name);
     }
 
-    private int UserId;
+    private int userId;
     private String userName;
 
     public int getUserId() {
-        return UserId;
+        return userId;
     }
 
     public void setUserId(int userId) {
-        UserId = userId;
+        this.userId = userId;
     }
 
     public String getUserName() {

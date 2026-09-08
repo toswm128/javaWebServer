@@ -1,5 +1,3 @@
-import com.sun.net.httpserver.Headers;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,10 +22,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
 
         ServerSocket serverSocket = new ServerSocket(8080);
-
-
         System.out.println("서버 실행 http://localhost:8080");
-        System.out.println(new Headers());
         router.get("/users", request -> {
             int status = 200;
             StringBuilder body = new StringBuilder();
@@ -35,11 +30,16 @@ public class Main {
                 body.append(i.getUserName()).append("\r\n");
             }
 
-            return buildResponse(status, String.valueOf(body));
+            return buildResponse(status, body.toString());
         });
         router.post("/users", request -> {
-            System.out.println(request.body());
-            return buildResponse(200, "body");
+            int status = 201;
+            userList.add(new User(1, request.body()));
+            StringBuilder body = new StringBuilder();
+            for (User i : userList) {
+                body.append(i.getUserName()).append("\r\n");
+            }
+            return buildResponse(status, body.toString());
         });
 
         while (true) {
@@ -215,23 +215,38 @@ public class Main {
 
         String status;
         String body;
+        Map<String, String> headers = new HashMap<>();
+        HttpResponse response = null;
 
         if (handler == null) {
             status = "404 Not Found";
             body = "404 Not Found";
         } else {
-            HttpResponse response = handler.handle(request);
-            status = response.status() + response.statusText();
+            response = handler.handle(request);
+            headers = response.headers().getHeaders();
+            status = response.status() + " " + response.statusText();
             body = response.body();
         }
 
         byte[] bodyBytes =
                 body.getBytes(StandardCharsets.UTF_8);
 
-        return "HTTP/1.1 " + status + "\r\n" +
-                "Content-Type: text/plain; charset=UTF-8\r\n" +
-                "Content-Length: " + bodyBytes.length + "\r\n" +
-                "\r\n" +
-                body;
+        StringBuilder result = new StringBuilder();
+        result.append("HTTP/1.1. ")
+                .append(status)
+                .append("\r\n");
+        for (Map.Entry<String, String> header :
+                headers.entrySet()) {
+            result.append(header.getKey())
+                    .append(": ")
+                    .append(header.getValue())
+                    .append("\r\n");
+        }
+        result.append("\r\n");
+        if (response != null) {
+            result.append(response.body());
+        }
+
+        return result.toString();
     }
 }
