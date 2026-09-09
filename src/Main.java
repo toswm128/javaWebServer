@@ -215,37 +215,39 @@ public class Main {
 
         String status;
         String body;
-        Map<String, String> headers = new HashMap<>();
+        HttpHeaders headers;
         HttpResponse response = null;
 
         if (handler == null) {
-            status = "404 Not Found";
-            body = "404 Not Found";
+            response = buildResponse(
+                    404,
+                    "404 Not Found"
+            );
+            status = response.status() + " " + response.statusText();
+            body = response.body();
+            headers = response.headers();
         } else {
             response = handler.handle(request);
-            headers = response.headers().getHeaders();
+            headers = response.headers();
             status = response.status() + " " + response.statusText();
             body = response.body();
         }
-
-        byte[] bodyBytes =
-                body.getBytes(StandardCharsets.UTF_8);
+        
 
         StringBuilder result = new StringBuilder();
-        result.append("HTTP/1.1. ")
+        result.append("HTTP/1.1 ")
                 .append(status)
                 .append("\r\n");
         for (Map.Entry<String, String> header :
-                headers.entrySet()) {
+                headers.getHeaders().entrySet()) {
             result.append(header.getKey())
                     .append(": ")
                     .append(header.getValue())
                     .append("\r\n");
         }
         result.append("\r\n");
-        if (response != null) {
-            result.append(response.body());
-        }
+        result.append(body);
+
 
         return result.toString();
     }
