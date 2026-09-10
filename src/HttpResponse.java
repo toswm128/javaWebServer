@@ -17,11 +17,11 @@ public record HttpResponse(
 
         headers.set(
                 "Content-type",
-                "text/plain; charset-UTF-8"
+                "text/plain; charset=UTF-8"
         );
         headers.set(
                 "Content-Length",
-                String.valueOf(bodyBytes)
+                String.valueOf(bodyBytes.length)
         );
 
         return new HttpResponse(
