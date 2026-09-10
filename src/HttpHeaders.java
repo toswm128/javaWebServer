@@ -1,17 +1,15 @@
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class HttpHeaders {
-    private final Map<String, String> headers = new HashMap<>();
+    private final Map<String, String> headers = new LinkedHashMap<>();
 
-    public HttpHeaders(String body) {
+    public void set(String name, String value) {
+        headers.put(name, value);
+    }
 
-        byte[] bodyBytes =
-                body.getBytes(StandardCharsets.UTF_8);
-
-        headers.put("Content-Type", "text/plain; charset=UTF-8");
-        headers.put("Content-Length", String.valueOf(bodyBytes.length));
+    public String get(String name) {
+        return headers.get(name);
     }
 
     public Map<String, String> getHeaders() {
