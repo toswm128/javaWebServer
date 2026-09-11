@@ -1,4 +1,4 @@
-package HTTP;
+package http;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -36,7 +36,7 @@ public record HttpResponse(
     public String toHttpString() {
         StringBuilder result = new StringBuilder();
 
-        result.append("HTTP/1.1 ")
+        result.append("http/1.1 ")
                 .append(status.code())
                 .append(" ")
                 .append(status.reason())

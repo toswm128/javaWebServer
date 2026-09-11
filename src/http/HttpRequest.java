@@ -1,4 +1,4 @@
-package HTTP;
+package http;
 
 public record HttpRequest(
         String method,

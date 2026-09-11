@@ -1,8 +1,8 @@
-package User;
+package user;
 
-import HTTP.HttpResponse;
-import HTTP.HttpStatus;
-import Router.Router;
+import http.HttpResponse;
+import http.HttpStatus;
+import router.Router;
 
 import java.util.ArrayList;
 import java.util.Arrays;

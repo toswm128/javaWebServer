@@ -1,12 +1,12 @@
-package Router;
+package router;
 
-import HTTP.Handler;
+import http.Handler;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class Router {
-    public final Map<String, Handler> routes = new HashMap<>();
+    private final Map<String, Handler> routes = new HashMap<>();
 
     public void get(String path, Handler handler) {
         routes.put("GET " + path, handler);

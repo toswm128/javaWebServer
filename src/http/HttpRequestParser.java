@@ -1,4 +1,4 @@
-package HTTP;
+package http;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -7,14 +7,9 @@ import java.nio.charset.StandardCharsets;
 
 public class HttpRequestParser {
 
-    private static String method;
-    private static String path;
-    private static HttpHeaders headers;
-    private static HttpBody body;
-
     public static HttpRequest parse(InputStream input) throws IOException {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        headers = new HttpHeaders();
+        HttpHeaders headers = new HttpHeaders();
         int b;
         while ((b = input.read()) != -1) {
             buffer.write(b);
@@ -31,8 +26,8 @@ public class HttpRequestParser {
 
         String[] headerLines = buffer.toString().split("\r\n");
         String[] requestParts = headerLines[0].split(" ");
-        method = requestParts[0];
-        path = requestParts[1];
+        String method = requestParts[0];
+        String path = requestParts[1];
         for (String header : headerLines) {
             if (header.contains(":")) {
                 int colonIndex = header.indexOf(':');

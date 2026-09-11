@@ -1,7 +1,7 @@
-package Router;
+package router;
 
 
-import User.UserRoutes;
+import user.UserRoutes;
 
 public class RouterConfig {
     public static void register(Router router) {

@@ -1,6 +1,6 @@
-import HTTP.*;
-import Router.Router;
-import Router.RouterConfig;
+import http.*;
+import router.Router;
+import router.RouterConfig;
 
 import java.io.OutputStream;
 import java.net.ServerSocket;
