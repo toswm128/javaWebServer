@@ -42,7 +42,7 @@ public record HttpRequestParser() {
         return headers;
     }
 
-    public static String parseBody(InputStream input) throws IOException {
+    public static HttpBody parseBody(InputStream input) throws IOException {
         int contentLength = 0;
 
         if (headers.getHeaders().isEmpty()) {
@@ -55,8 +55,8 @@ public record HttpRequestParser() {
             contentLength = Integer.parseInt(contentLengthHeader);
         }
         byte[] bodyBytes = input.readNBytes(contentLength);
-
-        return new String(bodyBytes, StandardCharsets.UTF_8);
+        
+        return new HttpBody(new String(bodyBytes, StandardCharsets.UTF_8));
     }
 
     public static String getMethod() {

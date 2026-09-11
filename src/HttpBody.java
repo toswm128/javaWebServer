@@ -1,4 +1,5 @@
-public interface HttpBody {
-    String body();
+public record HttpBody(
+        String body
+) {
 }
 

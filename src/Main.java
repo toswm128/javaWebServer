@@ -34,7 +34,7 @@ public class Main {
         });
 
         router.post("/users", request -> {
-            userList.add(new User(userList.size() + 1, request.body()));
+            userList.add(new User(userList.size() + 1, request.body().body()));
             StringBuilder body = new StringBuilder();
             for (User i : userList) {
                 body.append(i.getUserName()).append("\r\n");
@@ -47,7 +47,7 @@ public class Main {
             InputStream input = socket.getInputStream();
 
             HttpHeaders headers = HttpRequestParser.parseHeader(input);
-            String requestBody = HttpRequestParser.parseBody(input);
+            HttpBody requestBody = HttpRequestParser.parseBody(input);
             String method = HttpRequestParser.getMethod();
             String path = HttpRequestParser.getPath();
             HttpRequest request = new HttpRequest(method, path, headers, requestBody);
