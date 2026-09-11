@@ -22,13 +22,21 @@ public class UserRoutes {
 
     public static void register(Router router) {
         router.get("/users", request -> {
-            StringBuilder body = new StringBuilder();
-            for (User i : userList) {
-                body.append(i.getUserName())
-                        .append("\r\n");
+            try {
+                String json = objectMapper.writeValueAsString(userList);
+
+                return HttpResponse.text(
+                        HttpStatus.OK,
+                        json
+                );
+            } catch (Exception e) {
+                return HttpResponse.text(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "JSON 변환 실패"
+                );
             }
-            return HttpResponse.text(HttpStatus.OK, body.toString());
         });
+
         router.post("/users", request -> {
 
             try {
