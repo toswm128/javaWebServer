@@ -3,7 +3,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-public record HttpRequestParser() {
+public class HttpRequestParser {
 
     private static String method;
     private static String path;
@@ -55,7 +55,7 @@ public record HttpRequestParser() {
             contentLength = Integer.parseInt(contentLengthHeader);
         }
         byte[] bodyBytes = input.readNBytes(contentLength);
-        
+
         return new HttpBody(new String(bodyBytes, StandardCharsets.UTF_8));
     }
 
