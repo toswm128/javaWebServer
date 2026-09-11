@@ -14,16 +14,13 @@ public record HttpResponse(
             String body
     ) {
         HttpHeaders headers = new HttpHeaders();
-
-        byte[] bodyBytes = body.getBytes(StandardCharsets.UTF_8);
-
         headers.set(
                 "Content-type",
-                "text/plain; charset=UTF-8"
+                "application/json; charset=UTF-8"
         );
         headers.set(
                 "Content-Length",
-                String.valueOf(bodyBytes.length)
+                String.valueOf(body.getBytes(StandardCharsets.UTF_8).length)
         );
 
         return new HttpResponse(
