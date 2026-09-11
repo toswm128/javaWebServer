@@ -10,7 +10,7 @@ public class HttpRequestParser {
     private static HttpHeaders headers;
     private static HttpBody body;
 
-    public static HttpHeaders parseHeader(InputStream input) throws IOException {
+    public static HttpRequest parse(InputStream input) throws IOException {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         headers = new HttpHeaders();
         int b;
@@ -39,16 +39,8 @@ public class HttpRequestParser {
                 }
             }
         }
-        return headers;
-    }
 
-    public static HttpBody parseBody(InputStream input) throws IOException {
         int contentLength = 0;
-
-        if (headers.getHeaders().isEmpty()) {
-            parseHeader(input);
-        }
-
         String contentLengthHeader = headers.get("Content-Length");
 
         if (contentLengthHeader != null) {
@@ -56,16 +48,8 @@ public class HttpRequestParser {
         }
         byte[] bodyBytes = input.readNBytes(contentLength);
 
-        return new HttpBody(new String(bodyBytes, StandardCharsets.UTF_8));
-    }
+        return new HttpRequest(method, path, headers, new HttpBody(new String(bodyBytes, StandardCharsets.UTF_8)));
 
-    public static String getMethod() {
-        return method;
-    }
-
-
-    public static String getPath() {
-        return path;
     }
 
 
