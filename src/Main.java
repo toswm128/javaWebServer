@@ -1,54 +1,28 @@
 import HTTP.*;
-import User.User;
+import Router.Router;
+import Router.RouterConfig;
 
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 
 public class Main {
-
-    private static final Router router = new Router();
-
-    public static List<User> userList = new ArrayList<>(Arrays.asList(
-            new User(1, "조민수"),
-            new User(2, "황제원"),
-            new User(3, "서은건")
-    ));
 
 
     public static void main(String[] args) throws Exception {
 
         ServerSocket serverSocket = new ServerSocket(8080);
         System.out.println("서버 실행 http://localhost:8080");
-
-        router.get("/users", request -> {
-            StringBuilder body = new StringBuilder();
-            for (User i : userList) {
-                body.append(i.getUserName())
-                        .append("\r\n");
-            }
-            return HttpResponse.text(HttpStatus.OK, body.toString());
-        });
-
-        router.post("/users", request -> {
-            userList.add(new User(userList.size() + 1, request.body().text()));
-            StringBuilder body = new StringBuilder();
-            for (User i : userList) {
-                body.append(i.getUserName()).append("\r\n");
-            }
-            return HttpResponse.text(HttpStatus.CREATED, body.toString());
-        });
+        Router router = new Router();
+        RouterConfig.register(router);
 
         while (true) {
             Socket socket = serverSocket.accept();
             HttpRequest request = HttpRequestParser.parse(socket.getInputStream());
 
-            String response = getResponse(request);
+            String response = getResponse(request, router);
 
             OutputStream out = socket.getOutputStream();
 
@@ -62,7 +36,7 @@ public class Main {
         }
     }
 
-    private static String getResponse(HttpRequest request) {
+    private static String getResponse(HttpRequest request, Router router) {
 //      client에게 받은 메소드, 주소를 handler에 저장
         Handler handler =
                 router.find(
