@@ -1,5 +1,6 @@
 package user;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import http.HttpResponse;
 import http.HttpStatus;
 import router.Router;
@@ -17,6 +18,8 @@ public class UserRoutes {
             new User(3, "서은건")
     ));
 
+    static final ObjectMapper objectMapper = new ObjectMapper();
+
     public static void register(Router router) {
         router.get("/users", request -> {
             StringBuilder body = new StringBuilder();
@@ -27,12 +30,26 @@ public class UserRoutes {
             return HttpResponse.text(HttpStatus.OK, body.toString());
         });
         router.post("/users", request -> {
-            userList.add(new User(userList.size() + 1, request.body().text()));
-            StringBuilder body = new StringBuilder();
-            for (User i : userList) {
-                body.append(i.getUserName()).append("\r\n");
+
+            try {
+                CreateUserRequest createUserRequest = objectMapper.readValue(
+                        request.body().text(),
+                        CreateUserRequest.class
+                );
+
+                userList.add(new User(userList.size() + 1, createUserRequest.name()));
+
+                return HttpResponse.text(
+                        HttpStatus.CREATED,
+                        "추가되었습니다."
+                );
+
+            } catch (Exception e) {
+                return HttpResponse.text(
+                        HttpStatus.BAD_REQUEST,
+                        "잘못된 JSON입니다."
+                );
             }
-            return HttpResponse.text(HttpStatus.CREATED, body.toString());
         });
     }
 }
