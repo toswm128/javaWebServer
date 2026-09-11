@@ -1,3 +1,5 @@
+package HTTP;
+
 public record HttpRequest(
         String method,
         String path,

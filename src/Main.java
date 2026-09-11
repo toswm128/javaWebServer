@@ -1,4 +1,6 @@
-import java.io.InputStream;
+import HTTP.*;
+import User.User;
+
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -44,8 +46,7 @@ public class Main {
 
         while (true) {
             Socket socket = serverSocket.accept();
-            InputStream input = socket.getInputStream();
-            HttpRequest request = HttpRequestParser.parse(input);
+            HttpRequest request = HttpRequestParser.parse(socket.getInputStream());
 
             String response = getResponse(request);
 

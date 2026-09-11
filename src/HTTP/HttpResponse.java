@@ -1,3 +1,5 @@
+package HTTP;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 

@@ -1,3 +1,5 @@
+package HTTP;
+
 public enum HttpStatus {
 
     OK(200, "OK"),
