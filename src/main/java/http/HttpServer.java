@@ -1,5 +1,6 @@
 package http;
 
+import http.exception.BadRequestException;
 import router.Router;
 
 import java.io.IOException;
@@ -33,23 +34,32 @@ public class HttpServer {
     }
 
     private static String getResponse(HttpRequest request, Router router) {
-        Handler handler =
-                router.find(
-                        request.method(),
-                        request.path()
-                );
 
 
         HttpResponse response = null;
-        if (handler == null) {
-            response = HttpResponse.text(HttpStatus.NOT_FOUND, "");
-        } else {
-            response = handler.handle(request);
 
+        try {
+            Handler handler =
+                    router.find(
+                            request.method(),
+                            request.path()
+                    );
+
+
+            if (handler == null) {
+                response = HttpResponse.text(
+                        HttpStatus.NOT_FOUND,
+                        "Not Found"
+                );
+            } else {
+                response = handler.handle(request);
+            }
+        } catch (BadRequestException e) {
+            response = HttpResponse.text(HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (Exception e) {
+            response = HttpResponse.text(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error");
         }
 
-
-        System.out.println(response.toHttpString());
         return response.toHttpString();
     }
 }

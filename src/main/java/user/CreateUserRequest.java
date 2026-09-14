@@ -1,7 +1,8 @@
 package user;
 
 public record CreateUserRequest(
-        String name
+        String name,
+        Integer age
 ) {
 
 }

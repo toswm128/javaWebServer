@@ -3,6 +3,7 @@ package user;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import http.HttpResponse;
 import http.HttpStatus;
+import http.Json;
 import router.Router;
 
 import java.util.ArrayList;
@@ -13,51 +14,33 @@ import java.util.List;
 public class UserRoutes {
 
     public static List<User> userList = new ArrayList<>(Arrays.asList(
-            new User(1, "조민수"),
-            new User(2, "황제원"),
-            new User(3, "서은건")
+            new User(1, "조민수", 23),
+            new User(2, "황제원", 22),
+            new User(3, "서은건", 22)
     ));
 
     static final ObjectMapper objectMapper = new ObjectMapper();
 
     public static void register(Router router) {
         router.get("/users", request -> {
-            try {
-                String json = objectMapper.writeValueAsString(userList);
 
-                return HttpResponse.text(
-                        HttpStatus.OK,
-                        json
-                );
-            } catch (Exception e) {
-                return HttpResponse.text(
-                        HttpStatus.INTERNAL_SERVER_ERROR,
-                        "JSON 변환 실패"
-                );
-            }
+            String json = Json.write(userList);
+            return HttpResponse.text(
+                    HttpStatus.OK,
+                    json
+            );
         });
 
         router.post("/users", request -> {
 
-            try {
-                CreateUserRequest createUserRequest = objectMapper.readValue(
-                        request.body().text(),
-                        CreateUserRequest.class
-                );
+            CreateUserRequest createUserRequest = Json.read(
+                    request.body().text(), CreateUserRequest.class);
 
-                userList.add(new User(userList.size() + 1, createUserRequest.name()));
-
-                return HttpResponse.text(
-                        HttpStatus.CREATED,
-                        "추가되었습니다."
-                );
-
-            } catch (Exception e) {
-                return HttpResponse.text(
-                        HttpStatus.BAD_REQUEST,
-                        "잘못된 JSON입니다."
-                );
-            }
+            userList.add(new User(userList.size() + 1, createUserRequest.name(), createUserRequest.age()));
+            return HttpResponse.text(
+                    HttpStatus.CREATED,
+                    "추가되었습니다."
+            );
         });
     }
 }
