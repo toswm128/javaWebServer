@@ -37,18 +37,18 @@ public class HttpServer {
         HttpResponse response = null;
 
         try {
-            Router.PatchValueDTO handler =
+            Router.RouteMatch routeMatch =
                     router.find(
                             request.method(),
                             request.path()
                     );
-            if (handler.getHandler() == null) {
+            if (routeMatch.handler() == null) {
                 response = HttpResponse.text(
                         HttpStatus.NOT_FOUND,
                         "Not Found"
                 );
             } else {
-                response = handler.getHandler().handle(request, handler.getValue());
+                response = routeMatch.handler().handle(request, routeMatch.pathValues());
             }
         } catch (BadRequestException e) {
             response = HttpResponse.text(HttpStatus.BAD_REQUEST, e.getMessage());
