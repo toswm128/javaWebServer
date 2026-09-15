@@ -14,13 +14,13 @@ public class Router {
 
         private Handler handler;
 
-        public String getValue() {
+        public Map<String, String> getValue() {
             return value;
         }
 
-        private String value;
+        private Map<String, String> value;
 
-        public PatchValueDTO(Handler handler, String value) {
+        public PatchValueDTO(Handler handler, Map<String, String> value) {
             this.handler = handler;
             this.value = value;
         }
@@ -44,9 +44,9 @@ public class Router {
                 String[] routedPath = s.split("/");
                 String[] routingPath = methodPath.split("/");
                 if (routedPath.length == routingPath.length) {
-                    int key = CheckPath(routedPath, routingPath);
-                    if (key != -1) {
-                        return new PatchValueDTO(routes.get(s), routingPath[key].trim());
+                    Map<String, String> pathMap = CheckPath(routedPath, routingPath);
+                    if (pathMap != null) {
+                        return new PatchValueDTO(routes.get(s), pathMap);
                     }
                 }
             }
@@ -54,18 +54,18 @@ public class Router {
         return new PatchValueDTO(routes.get(method + " " + path), null);
     }
 
-    private int CheckPath(String[] routedPath, String[] routingPath) {
-        int key = -1;
+    private Map<String, String> CheckPath(String[] routedPath, String[] routingPath) {
+        Map<String, String> pathMap = new HashMap<>();
 
         for (int i = 0; routedPath.length > i; i++) {
-            if (routedPath[i].contains("{")) {
-                key = i;
+            if (routedPath[i].trim().startsWith("{") && routedPath[i].trim().endsWith("}")) {
+                pathMap.put(routedPath[i].trim().substring(1, routedPath[i].trim().length() - 1), routingPath[i].trim());
             } else if (!Objects.equals(routedPath[i], routingPath[i])) {
-                return -1;
+                return null;
             }
         }
 
-        return key;
+        return pathMap;
 
     }
 

@@ -14,9 +14,9 @@ import java.util.List;
 public class UserRoutes {
 
     public static List<User> userList = new ArrayList<>(Arrays.asList(
-            new User(1, "조민수", 23),
-            new User(2, "황제원", 22),
-            new User(3, "서은건", 22)
+            new User(0, "조민수", 23),
+            new User(1, "황제원", 22),
+            new User(2, "서은건", 22)
     ));
 
     static final ObjectMapper objectMapper = new ObjectMapper();
@@ -40,8 +40,8 @@ public class UserRoutes {
             );
         });
 
-        router.get("/users/{id}", (request, id) -> {
-            String json = Json.write(userList.get(Integer.parseInt(id)));
+        router.get("/users/{id}", (request, patchValue) -> {
+            String json = Json.write(userList.get(Integer.parseInt(patchValue.get("id"))));
             return HttpResponse.text(
                     HttpStatus.OK,
                     json

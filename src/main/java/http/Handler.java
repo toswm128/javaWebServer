@@ -1,6 +1,8 @@
 package http;
 
+import java.util.Map;
+
 public interface Handler {
-    HttpResponse handle(HttpRequest httpRequest, String pathValue);
+    HttpResponse handle(HttpRequest httpRequest, Map<String, String> pathValue);
 }
 
