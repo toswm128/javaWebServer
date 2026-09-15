@@ -39,7 +39,7 @@ public class HttpServer {
         HttpResponse response = null;
 
         try {
-            Handler handler =
+            Router.PatchValueDTO handler =
                     router.find(
                             request.method(),
                             request.path()
@@ -52,7 +52,7 @@ public class HttpServer {
                         "Not Found"
                 );
             } else {
-                response = handler.handle(request);
+                response = handler.getHandler().handle(request, handler.getValue());
             }
         } catch (BadRequestException e) {
             response = HttpResponse.text(HttpStatus.BAD_REQUEST, e.getMessage());

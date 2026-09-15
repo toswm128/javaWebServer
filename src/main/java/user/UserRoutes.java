@@ -22,7 +22,7 @@ public class UserRoutes {
     static final ObjectMapper objectMapper = new ObjectMapper();
 
     public static void register(Router router) {
-        router.get("/users", request -> {
+        router.get("/users", (request, _) -> {
 
             String json = Json.write(userList);
             return HttpResponse.text(
@@ -31,7 +31,32 @@ public class UserRoutes {
             );
         });
 
-        router.post("/users", request -> {
+        router.get("/users/find", (request, _) -> {
+
+            String json = Json.write(userList);
+            return HttpResponse.text(
+                    HttpStatus.OK,
+                    json
+            );
+        });
+
+        router.get("/users/{id}", (request, id) -> {
+            String json = Json.write(userList.get(Integer.parseInt(id)));
+            return HttpResponse.text(
+                    HttpStatus.OK,
+                    json
+            );
+        });
+
+        router.get("/users/{id}/followers", (request, _) -> {
+            String json = Json.write(userList);
+            return HttpResponse.text(
+                    HttpStatus.OK,
+                    json
+            );
+        });
+
+        router.post("/users", (request, _) -> {
 
             CreateUserRequest createUserRequest = Json.read(
                     request.body().text(), CreateUserRequest.class);
