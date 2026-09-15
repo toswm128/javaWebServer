@@ -34,8 +34,6 @@ public class HttpServer {
     }
 
     private static String getResponse(HttpRequest request, Router router) {
-
-
         HttpResponse response = null;
 
         try {
@@ -44,9 +42,7 @@ public class HttpServer {
                             request.method(),
                             request.path()
                     );
-
-
-            if (handler == null) {
+            if (handler.getHandler() == null) {
                 response = HttpResponse.text(
                         HttpStatus.NOT_FOUND,
                         "Not Found"
