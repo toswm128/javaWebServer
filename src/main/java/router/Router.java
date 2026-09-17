@@ -1,93 +1,164 @@
 package router;
 
 import http.Handler;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 public class Router {
 
-    public record Route(
-            String method,
-            List<PathSegment> pathSegment,
-            Handler handler
-    ) {
+  public record Route(
+      String method,
+      List<PathSegment> pathSegments,
+      Handler handler
+  ) {
+
+  }
+
+  public record PathSegment(
+      String path,
+      boolean variable,
+      String valueName
+  ) {
+
+  }
+
+  public record RoutingPath(
+      String method,
+      String path,
+      List<PathSegment> pathSegments,
+      Map<String, String> queryMap,
+      Map<String, String> pathValueMap
+  ) {
+
+  }
+
+  public record RouteMatch(
+      Handler handler,
+      Map<String, String> pathValues
+  ) {
+
+
+  }
+
+  private List<PathSegment> parsePathSegments(String path) {
+    List<PathSegment> pathList = new ArrayList<>();
+    for (String p : path.trim().split("/")) {
+      if (p.equals("")) {
+        continue;
+      }
+      String pathPiece = p.trim();
+      String valueName = null;
+      boolean variable = false;
+      if (pathPiece.startsWith("{") && pathPiece.endsWith("}")) {
+        valueName = pathPiece.substring(1, pathPiece.length() - 1);
+        variable = true;
+      }
+      pathList.add(new PathSegment(pathPiece, variable, valueName));
     }
 
-    public record RouteMatch(
-            Handler handler,
-            Map<String, String> pathValues
-    ) {
-    }
+    return pathList;
+  }
 
-    public record PathSegment(
-            String path,
-            boolean variable,
-            String valueName
-    ) {
+  private RoutingPath parseRoutingPath(String method, String path,
+      List<PathSegment> mathedPath) {
+    List<PathSegment> pathSegments = parsePathSegments(path);
+    Map<String, String> pathValues = new HashMap<>();
+    Map<String, String> queryMap = new HashMap<>();
+    int i = 0;
 
-    }
-
-    private List<PathSegment> parsePathSegments(String path) {
-        List<PathSegment> pathList = new ArrayList<>();
-        for (String p : path.trim().split("/")) {
-            String pathPiece = p.trim();
-            String valueName = null;
-            boolean variable = false;
-            if (pathPiece.startsWith("{") && pathPiece.endsWith("}")) {
-                valueName = pathPiece.substring(1, pathPiece.length() - 1);
-                variable = true;
-            }
-            pathList.add(new PathSegment(pathPiece, variable, valueName));
+    for (PathSegment p : mathedPath) {
+      if (p.variable()) {
+        PathSegment pathSegment = pathSegments.get(i);
+        if (pathSegments.get(i) != null) {
+          pathValues.put(p.valueName, pathSegment.path.split("\\?")[0]);
         }
-
-
-        return pathList;
+      }
+      i++;
     }
 
-    private final Map<String, Route> routes = new HashMap<>();
+    String pathPiece = pathSegments.get(pathSegments.size() - 1).path;
 
-    public void get(String path, Handler handler) {
-        String methodPath = "GET " + path;
-        routes.put(methodPath, new Route("GET", parsePathSegments(path), handler));
-    }
-
-    public void post(String path, Handler handler) {
-        String methodPath = "POST " + path;
-        routes.put(methodPath, new Route("POST", parsePathSegments(path), handler));
-    }
-
-    public RouteMatch find(String method, String path) {
-        Route thisRoute = routes.get(method + " " + path);
-        if (thisRoute == null) {
-            List<PathSegment> routingPathList = parsePathSegments(path);
-
-            for (Route route : routes.values()) {
-                List<PathSegment> pathSegment = route.pathSegment();
-                if (routingPathList.size() == pathSegment.size() && Objects.equals(route.method(), method)) {
-                    Map<String, String> pathMap = CheckPath(pathSegment, routingPathList);
-                    if (pathMap != null)
-                        return new RouteMatch(route.handler(), pathMap);
-                }
-            }
-            return null;
-        } else
-            return new RouteMatch(routes.get(method + " " + path).handler(), new HashMap<>());
-
-
-    }
-
-    private Map<String, String> CheckPath(List<PathSegment> routedPath, List<PathSegment> routingPath) {
-        Map<String, String> pathMap = new HashMap<>();
-        for (int i = 0; routedPath.size() > i; i++) {
-            if (routedPath.get(i).variable()) {
-                pathMap.put(routedPath.get(i).valueName(), routingPath.get(i).path());
-            } else if (!Objects.equals(routedPath.get(i).path(), routingPath.get(i).path())) {
-                return null;
-            }
+    String[] pathPieceSplit = pathPiece.split("\\?");
+    if (pathPieceSplit.length >= 2) {
+      String[] querys = pathPieceSplit[1].split("&");
+      for (String q : querys) {
+        String[] queryData = q.split("=");
+        if (queryData.length == 2) {
+          queryMap.put(queryData[0], queryData[1]);
         }
-
-        return pathMap;
-
+      }
     }
+    System.out.println(Arrays.asList(queryMap) + "  " + Arrays.asList(pathValues));
+    return new RoutingPath(method, path, pathSegments, queryMap, pathValues);
+  }
+
+  private final Map<String, Route> routes = new HashMap<>();
+
+  public void get(String path, Handler handler) {
+    String methodPath = "GET " + path;
+    routes.put(methodPath, new Route("GET", parsePathSegments(path), handler));
+  }
+
+  public void post(String path, Handler handler) {
+    String methodPath = "POST " + path;
+    routes.put(methodPath, new Route("POST", parsePathSegments(path), handler));
+  }
+
+  public RouteMatch find(String method, String path) {
+    Route thisRoute = routes.get(method + " " + path);
+    if (thisRoute == null) {
+      List<PathSegment> mathedPath = matchPath(method, path.split("\\?")[0]);
+      if (mathedPath != null) {
+        StringBuilder mathedPathString = new StringBuilder();
+        for (PathSegment m : mathedPath) {
+          mathedPathString.append("/").append(m.path());
+        }
+        RoutingPath routingPath = parseRoutingPath(method, path, mathedPath);
+        return new RouteMatch(routes.get(method + " " + mathedPathString.toString()).handler(),
+            routingPath.pathValueMap());
+
+      }
+      return null;
+    } else {
+      return new RouteMatch(routes.get(method + " " + path).handler(), new HashMap<>());
+    }
+
+
+  }
+
+  private List<PathSegment> matchPath(String method, String path) {
+    List<PathSegment> routingPathList = parsePathSegments(path);
+
+    for (Route route : routes.values()) {
+      List<PathSegment> pathSegment = route.pathSegments();
+      if (routingPathList.size() == pathSegment.size() && Objects.equals(route.method(),
+          method)) {
+        Map<String, String> pathMap = checkPath(pathSegment, routingPathList);
+        if (pathMap != null) {
+          return route.pathSegments();
+        }
+      }
+    }
+    return null;
+  }
+
+  private Map<String, String> checkPath(List<PathSegment> routedPath,
+      List<PathSegment> routingPath) {
+    Map<String, String> pathMap = new HashMap<>();
+    for (int i = 0; routedPath.size() > i; i++) {
+      if (routedPath.get(i).variable()) {
+        pathMap.put(routedPath.get(i).valueName(), routingPath.get(i).path());
+      } else if (!Objects.equals(routedPath.get(i).path(), routingPath.get(i).path())) {
+        return null;
+      }
+    }
+
+    return pathMap;
+
+  }
 
 }
