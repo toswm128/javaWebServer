@@ -5,6 +5,14 @@ import http.Handler;
 import java.util.*;
 
 public class Router {
+
+    public record Route(
+            String method,
+            List<PathSegment> pathSegment,
+            Handler handler
+    ) {
+    }
+
     public record RouteMatch(
             Handler handler,
             Map<String, String> pathValues
@@ -36,35 +44,36 @@ public class Router {
         return pathList;
     }
 
-    private final Map<String, Handler> routes = new HashMap<>();
-    private final Map<String, List<PathSegment>> pathLists = new HashMap<>();
+    private final Map<String, Route> routes = new HashMap<>();
 
     public void get(String path, Handler handler) {
         String methodPath = "GET " + path;
-        pathLists.put(methodPath, parsePathSegments(methodPath));
-        routes.put(methodPath, handler);
+        routes.put(methodPath, new Route("GET", parsePathSegments(path), handler));
     }
 
     public void post(String path, Handler handler) {
         String methodPath = "POST " + path;
-        pathLists.put(methodPath, parsePathSegments(methodPath));
-        routes.put(methodPath, handler);
+        routes.put(methodPath, new Route("POST", parsePathSegments(path), handler));
     }
 
     public RouteMatch find(String method, String path) {
-        if (routes.get(method + " " + path) == null) {
-            List<PathSegment> routingPathList = parsePathSegments(method + " " + path);
+        Route thisRoute = routes.get(method + " " + path);
+        if (thisRoute == null) {
+            List<PathSegment> routingPathList = parsePathSegments(path);
 
-            for (String listKey : pathLists.keySet()) {
-                System.out.println(listKey + "  " + pathLists.get(listKey) + "  " + Arrays.asList(routingPathList));
-                if (routingPathList.size() == pathLists.get(listKey).size()) {
-                    Map<String, String> pathMap = CheckPath(pathLists.get(listKey), routingPathList);
+            for (Route route : routes.values()) {
+                List<PathSegment> pathSegment = route.pathSegment();
+                if (routingPathList.size() == pathSegment.size() && Objects.equals(route.method(), method)) {
+                    Map<String, String> pathMap = CheckPath(pathSegment, routingPathList);
                     if (pathMap != null)
-                        return new RouteMatch(routes.get(listKey), pathMap);
+                        return new RouteMatch(route.handler(), pathMap);
                 }
             }
-        }
-        return new RouteMatch(routes.get(method + " " + path), null);
+            return null;
+        } else
+            return new RouteMatch(routes.get(method + " " + path).handler(), new HashMap<>());
+
+
     }
 
     private Map<String, String> CheckPath(List<PathSegment> routedPath, List<PathSegment> routingPath) {

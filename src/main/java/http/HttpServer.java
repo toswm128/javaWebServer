@@ -42,7 +42,7 @@ public class HttpServer {
                             request.method(),
                             request.path()
                     );
-            if (routeMatch.handler() == null) {
+            if (routeMatch == null) {
                 response = HttpResponse.text(
                         HttpStatus.NOT_FOUND,
                         "Not Found"
