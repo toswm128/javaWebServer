@@ -1,62 +1,65 @@
 package http;
 
 import http.exception.BadRequestException;
-import router.Router;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import router.Router;
 
 public class HttpServer {
 
-    public void start(int port, Router router) throws IOException {
-        ServerSocket serverSocket = new ServerSocket(port);
-        System.out.println("서버 실행 http://localhost:" + port);
+  public void start(int port, Router router) throws IOException {
+    ServerSocket serverSocket = new ServerSocket(port);
+    System.out.println("서버 실행 http://localhost:" + port);
 
-        while (true) {
-            Socket socket = serverSocket.accept();
-            HttpRequest request = HttpRequestParser.parse(socket.getInputStream());
+    while (true) {
+      Socket socket = serverSocket.accept();
 
-            String response = getResponse(request, router);
+      HttpRequest request = HttpRequestParser.parse(socket.getInputStream());
 
-            OutputStream out = socket.getOutputStream();
+      String response = getResponse(request, router);
 
-            out.write(
-                    response.getBytes(StandardCharsets.UTF_8)
-            );
+      OutputStream out = socket.getOutputStream();
 
-            out.flush();
+      out.write(
+          response.getBytes(StandardCharsets.UTF_8)
+      );
 
-            socket.close();
-        }
+      out.flush();
+
+      socket.close();
+    }
+  }
+
+  private static String getResponse(HttpRequest request, Router router) {
+    HttpResponse response = null;
+    if (request == null) {
+      throw new BadRequestException("request가 불완전합니다.");
     }
 
-    private static String getResponse(HttpRequest request, Router router) {
-        HttpResponse response = null;
-
-        try {
-            Router.RouteMatch routeMatch =
-                    router.find(
-                            request.method(),
-                            request.path()
-                    );
-            if (routeMatch == null) {
-                response = HttpResponse.text(
-                        HttpStatus.NOT_FOUND,
-                        "Not Found"
-                );
-            } else {
-                response = routeMatch.handler().handle(request, routeMatch.pathValues());
-            }
-        } catch (BadRequestException e) {
-            response = HttpResponse.text(HttpStatus.BAD_REQUEST, e.getMessage());
-        } catch (Exception e) {
-            response = HttpResponse.text(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error");
-        }
-
-        return response.toHttpString();
+    try {
+      Router.RouteMatch routeMatch =
+          router.find(
+              request.method(),
+              request.path()
+          );
+      if (routeMatch == null) {
+        response = HttpResponse.text(
+            HttpStatus.NOT_FOUND,
+            "Not Found"
+        );
+      } else {
+        response = routeMatch.handler().handle(request, routeMatch.pathValues());
+      }
+    } catch (BadRequestException e) {
+      response = HttpResponse.text(HttpStatus.BAD_REQUEST, e.getMessage());
+    } catch (Exception e) {
+      response = HttpResponse.text(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error");
     }
+
+    return response.toHttpString();
+  }
 }
 
