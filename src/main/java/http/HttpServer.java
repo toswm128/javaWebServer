@@ -17,17 +17,36 @@ public class HttpServer {
     while (true) {
       Socket socket = serverSocket.accept();
 
-      HttpRequest request = HttpRequestParser.parse(socket.getInputStream());
+      try (socket) {
+        try {
+          HttpRequest request = HttpRequestParser.parse(socket.getInputStream());
+          if (request == null) {
+            continue;
+          }
 
-      String response = getResponse(request, router);
+          String response = getResponse(request, router);
 
-      OutputStream out = socket.getOutputStream();
+          OutputStream out = socket.getOutputStream();
 
-      out.write(
-          response.getBytes(StandardCharsets.UTF_8)
-      );
+          out.write(
+              response.getBytes(StandardCharsets.UTF_8)
+          );
 
-      out.flush();
+          out.flush();
+
+        } catch (BadRequestException e) {
+          OutputStream out = socket.getOutputStream();
+          out.write(
+              HttpResponse.text(HttpStatus.BAD_REQUEST, e.getMessage()).toHttpString().getBytes(
+                  StandardCharsets.UTF_8)
+          );
+
+          out.flush();
+
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
 
       socket.close();
     }
@@ -35,9 +54,6 @@ public class HttpServer {
 
   private static String getResponse(HttpRequest request, Router router) {
     HttpResponse response = null;
-    if (request == null) {
-      throw new BadRequestException("request가 불완전합니다.");
-    }
 
     try {
       Router.RouteMatch routeMatch =

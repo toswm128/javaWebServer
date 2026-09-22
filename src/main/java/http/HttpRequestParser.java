@@ -26,14 +26,17 @@ public class HttpRequestParser {
         break;
       }
     }
-    if (buffer.size() == 0 || isDone) {
+    if (buffer.size() == 0) {
       return null;
+    }
+    if (isDone) {
+      throw new BadRequestException("잘못된 요청입니다.");
     }
     try {
       String[] headerLines = buffer.toString().split("\r\n");
       String[] requestParts = headerLines[0].split(" ");
       if (requestParts.length < 2) {
-        return null;
+        throw new BadRequestException("잘못된 요청입니다.");
       }
       String method = requestParts[0];
       String path = requestParts[1];
@@ -50,18 +53,25 @@ public class HttpRequestParser {
       String contentLengthHeader = headers.get("Content-Length");
 
       if (contentLengthHeader != null) {
-
         contentLength = Integer.parseInt(contentLengthHeader);
       }
+      if (contentLength < 0) {
+        throw new IllegalArgumentException("content-length는 음수일 수 없습니다.");
+      }
       byte[] bodyBytes = input.readNBytes(contentLength);
+      if (bodyBytes.length != contentLength) {
+        throw new BadRequestException("잘못된 요청입니다.");
+      }
 
       return new HttpRequest(method, path, headers,
           new HttpBody(new String(bodyBytes, StandardCharsets.UTF_8)));
 
     } catch (NumberFormatException e) {
-      throw new BadRequestException(e.getMessage());
-    } catch (Exception e) {
-      throw new RuntimeException(e);
+      throw new BadRequestException("잘못된 요청입니다.",
+          e);
+    } catch (IllegalArgumentException e) {
+      throw new BadRequestException("잘못된 요청입니다.",
+          e);
     }
 
   }
