@@ -21,7 +21,7 @@ public class UserRoutes {
   static final ObjectMapper objectMapper = new ObjectMapper();
 
   public static void register(Router router) {
-    router.get("/users", (request, _, _) -> {
+    router.get("/users", (request, __) -> {
 
       String json = Json.write(userList);
       return HttpResponse.text(
@@ -30,16 +30,16 @@ public class UserRoutes {
       );
     });
 
-    router.get("/users/find", (request, _, queryParams) -> {
+    router.get("/users/find", (request, _) -> {
       String json = Json.write(userList);
-      System.out.println(Arrays.asList(queryParams));
+      System.out.println(Arrays.asList(request.queryParams()));
       return HttpResponse.text(
           HttpStatus.OK,
           json
       );
     });
 
-    router.get("/users/{id}", (request, patchValue, _) -> {
+    router.get("/users/{id}", (request, patchValue) -> {
       String json = Json.write(userList.get(Integer.parseInt(patchValue.get("id"))));
       return HttpResponse.text(
           HttpStatus.OK,
@@ -47,7 +47,7 @@ public class UserRoutes {
       );
     });
 
-    router.get("/users/{id}/followers", (request, _, _) -> {
+    router.get("/users/{id}/followers", (request, _) -> {
       String json = Json.write(userList);
       return HttpResponse.text(
           HttpStatus.OK,
@@ -55,7 +55,7 @@ public class UserRoutes {
       );
     });
 
-    router.post("/users", (request, _, _) -> {
+    router.post("/users", (request, _) -> {
 
       CreateUserRequest createUserRequest = Json.read(
           request.body().text(), CreateUserRequest.class);

@@ -71,7 +71,7 @@ public class Router {
       if (p.variable()) {
         PathSegment pathSegment = pathSegments.get(i);
         if (pathSegments.get(i) != null) {
-          pathValues.put(p.valueName, pathSegment.path.split("\\?")[0]);
+          pathValues.put(p.valueName, pathSegment.path);
         }
       }
       i++;

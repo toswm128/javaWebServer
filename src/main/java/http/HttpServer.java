@@ -47,8 +47,6 @@ public class HttpServer {
       } catch (IOException e) {
         e.printStackTrace();
       }
-
-      socket.close();
     }
   }
 
@@ -71,7 +69,7 @@ public class HttpServer {
         );
       } else {
         response = routeMatch.handler()
-            .handle(request, routeMatch.pathValues(), request.queryParams());
+            .handle(request, routeMatch.pathValues());
       }
     } catch (BadRequestException e) {
       response = HttpResponse.text(HttpStatus.BAD_REQUEST, e.getMessage());

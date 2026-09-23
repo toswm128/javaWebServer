@@ -4,7 +4,6 @@ import java.util.Map;
 
 public interface Handler {
 
-  HttpResponse handle(HttpRequest httpRequest, Map<String, String> pathValue,
-      Map<String, String> queryParams);
+  HttpResponse handle(HttpRequest httpRequest, Map<String, String> pathValue);
 }
 
