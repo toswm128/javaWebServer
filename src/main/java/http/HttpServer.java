@@ -16,22 +16,38 @@ public class HttpServer {
 
     while (true) {
       Socket socket = serverSocket.accept();
-      OutputStream out = socket.getOutputStream();
-      try {
-        HttpRequest request = HttpRequestParser.parse(socket.getInputStream());
-        String response = getResponse(request, router);
-        out.write(
-            response.getBytes(StandardCharsets.UTF_8)
-        );
 
-      } catch (BadRequestException e) {
-        out.write(
-            HttpResponse.text(HttpStatus.BAD_REQUEST, e.getMessage()).toHttpString().getBytes(
-                StandardCharsets.UTF_8)
-        );
+      try (socket) {
+        try {
+          HttpRequest request = HttpRequestParser.parse(socket.getInputStream());
+          if (request == null) {
+            continue;
+          }
+
+          String response = getResponse(request, router);
+
+          OutputStream out = socket.getOutputStream();
+
+          out.write(
+              response.getBytes(StandardCharsets.UTF_8)
+          );
+
+          out.flush();
+
+        } catch (BadRequestException e) {
+          OutputStream out = socket.getOutputStream();
+          out.write(
+              HttpResponse.text(HttpStatus.BAD_REQUEST, e.getMessage()).toHttpString().getBytes(
+                  StandardCharsets.UTF_8)
+          );
+
+          out.flush();
+
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
       }
 
-      out.flush();
       socket.close();
     }
   }
