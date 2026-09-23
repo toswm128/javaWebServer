@@ -2,7 +2,6 @@ package router;
 
 import http.Handler;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +29,6 @@ public class Router {
       String method,
       String path,
       List<PathSegment> pathSegments,
-      Map<String, String> queryMap,
       Map<String, String> pathValueMap
   ) {
 
@@ -67,7 +65,6 @@ public class Router {
       List<PathSegment> mathedPath) {
     List<PathSegment> pathSegments = parsePathSegments(path);
     Map<String, String> pathValues = new HashMap<>();
-    Map<String, String> queryMap = new HashMap<>();
     int i = 0;
 
     for (PathSegment p : mathedPath) {
@@ -80,20 +77,7 @@ public class Router {
       i++;
     }
 
-    String pathPiece = pathSegments.get(pathSegments.size() - 1).path;
-
-    String[] pathPieceSplit = pathPiece.split("\\?");
-    if (pathPieceSplit.length >= 2) {
-      String[] querys = pathPieceSplit[1].split("&");
-      for (String q : querys) {
-        String[] queryData = q.split("=");
-        if (queryData.length == 2) {
-          queryMap.put(queryData[0], queryData[1]);
-        }
-      }
-    }
-    System.out.println(Arrays.asList(queryMap) + "  " + Arrays.asList(pathValues));
-    return new RoutingPath(method, path, pathSegments, queryMap, pathValues);
+    return new RoutingPath(method, path, pathSegments, pathValues);
   }
 
   private final Map<String, Route> routes = new HashMap<>();
@@ -111,7 +95,7 @@ public class Router {
   public RouteMatch find(String method, String path) {
     Route thisRoute = routes.get(method + " " + path);
     if (thisRoute == null) {
-      List<PathSegment> mathedPath = matchPath(method, path.split("\\?")[0]);
+      List<PathSegment> mathedPath = matchPath(method, path);
       if (mathedPath != null) {
         StringBuilder mathedPathString = new StringBuilder();
         for (PathSegment m : mathedPath) {

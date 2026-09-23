@@ -16,19 +16,22 @@ public class HttpServer {
 
     while (true) {
       Socket socket = serverSocket.accept();
-
-      HttpRequest request = HttpRequestParser.parse(socket.getInputStream());
-
-      String response = getResponse(request, router);
-
       OutputStream out = socket.getOutputStream();
+      try {
+        HttpRequest request = HttpRequestParser.parse(socket.getInputStream());
+        String response = getResponse(request, router);
+        out.write(
+            response.getBytes(StandardCharsets.UTF_8)
+        );
 
-      out.write(
-          response.getBytes(StandardCharsets.UTF_8)
-      );
+      } catch (BadRequestException e) {
+        out.write(
+            HttpResponse.text(HttpStatus.BAD_REQUEST, e.getMessage()).toHttpString().getBytes(
+                StandardCharsets.UTF_8)
+        );
+      }
 
       out.flush();
-
       socket.close();
     }
   }
@@ -51,7 +54,8 @@ public class HttpServer {
             "Not Found"
         );
       } else {
-        response = routeMatch.handler().handle(request, routeMatch.pathValues());
+        response = routeMatch.handler()
+            .handle(request, routeMatch.pathValues(), request.queryParams());
       }
     } catch (BadRequestException e) {
       response = HttpResponse.text(HttpStatus.BAD_REQUEST, e.getMessage());

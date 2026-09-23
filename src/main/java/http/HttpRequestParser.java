@@ -5,6 +5,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
 public class HttpRequestParser {
 
@@ -33,10 +35,23 @@ public class HttpRequestParser {
       String[] headerLines = buffer.toString().split("\r\n");
       String[] requestParts = headerLines[0].split(" ");
       if (requestParts.length < 2) {
-        return null;
+        throw new BadRequestException("읽을 수 없는 request입니다.");
       }
       String method = requestParts[0];
       String path = requestParts[1];
+      Map<String, String> queryParams = new HashMap<>();
+      int queryIndex = path.indexOf('?');
+      if (queryIndex != -1) {
+        String query = path.substring(queryIndex + 1);
+        path = path.substring(0, queryIndex);
+        for (String q : query.split("&")) {
+          String[] queryData = q.split("=", 2);
+          if (queryData.length == 2) {
+            queryParams.put(queryData[0], queryData[1]);
+          }
+        }
+      }
+
       for (String header : headerLines) {
         if (header.contains(":")) {
           int colonIndex = header.indexOf(':');
@@ -56,12 +71,11 @@ public class HttpRequestParser {
       byte[] bodyBytes = input.readNBytes(contentLength);
 
       return new HttpRequest(method, path, headers,
-          new HttpBody(new String(bodyBytes, StandardCharsets.UTF_8)));
+          new HttpBody(new String(bodyBytes, StandardCharsets.UTF_8)),
+          queryParams);
 
     } catch (NumberFormatException e) {
-      throw new BadRequestException(e.getMessage());
-    } catch (Exception e) {
-      throw new RuntimeException(e);
+      throw new BadRequestException("Content-Length가 올바르지 않습니다.", e);
     }
 
   }
