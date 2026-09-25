@@ -22,7 +22,6 @@ public class UserRoutes {
 
   public static void register(Router router) {
     router.get("/users", (request, __) -> {
-
       String json = Json.write(userList);
       return HttpResponse.text(
           HttpStatus.OK,

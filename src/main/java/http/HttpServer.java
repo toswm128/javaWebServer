@@ -16,46 +16,51 @@ public class HttpServer {
 
     while (true) {
       Socket socket = serverSocket.accept();
+      Runnable job = () -> {
+        handleClient(socket, router);
+      };
+      Thread thread = new Thread(job);
+      thread.start();
 
-      try (socket) {
-        try {
-          HttpRequest request = HttpRequestParser.parse(socket.getInputStream());
-          if (request == null) {
-            continue;
-          }
+    }
+  }
 
-          String response = getResponse(request, router);
 
-          OutputStream out = socket.getOutputStream();
-
-          out.write(
-              response.getBytes(StandardCharsets.UTF_8)
-          );
-
-          out.flush();
-
-        } catch (BadRequestException e) {
-          OutputStream out = socket.getOutputStream();
-          out.write(
-              HttpResponse.text(HttpStatus.BAD_REQUEST, e.getMessage()).toHttpString().getBytes(
-                  StandardCharsets.UTF_8)
-          );
-
-          out.flush();
-
+  private static void handleClient(Socket socket, Router router) {
+    try (socket) {
+      try {
+        HttpRequest request = HttpRequestParser.parse(socket.getInputStream());
+        if (request == null) {
+          return;
         }
-      } catch (IOException e) {
-        e.printStackTrace();
+
+        String response = getResponse(request, router);
+
+        OutputStream out = socket.getOutputStream();
+
+        out.write(
+            response.getBytes(StandardCharsets.UTF_8)
+        );
+
+        out.flush();
+
+      } catch (BadRequestException e) {
+        OutputStream out = socket.getOutputStream();
+        out.write(
+            HttpResponse.text(HttpStatus.BAD_REQUEST, e.getMessage()).toHttpString().getBytes(
+                StandardCharsets.UTF_8)
+        );
+
+        out.flush();
+
       }
+    } catch (IOException e) {
+      e.printStackTrace();
     }
   }
 
   private static String getResponse(HttpRequest request, Router router) {
     HttpResponse response = null;
-    if (request == null) {
-      throw new BadRequestException("request가 불완전합니다.");
-    }
-
     try {
       Router.RouteMatch routeMatch =
           router.find(
