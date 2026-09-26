@@ -6,6 +6,8 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import router.Router;
 
 public class HttpServer {
@@ -14,13 +16,14 @@ public class HttpServer {
     ServerSocket serverSocket = new ServerSocket(port);
     System.out.println("서버 실행 http://localhost:" + port);
 
+    ExecutorService executor = Executors.newFixedThreadPool(4);
+
     while (true) {
       Socket socket = serverSocket.accept();
       Runnable job = () -> {
         handleClient(socket, router);
       };
-      Thread thread = new Thread(job);
-      thread.start();
+      executor.execute(job);
 
     }
   }

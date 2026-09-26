@@ -55,12 +55,12 @@ public class UserRoutes {
     });
 
     router.post("/users", (request, _) -> {
-
       CreateUserRequest createUserRequest = Json.read(
           request.body().text(), CreateUserRequest.class);
-
-      userList.add(
-          new User(userList.size() + 1, createUserRequest.name(), createUserRequest.age()));
+      synchronized (userList) {
+        userList.add(
+            new User(userList.size() + 1, createUserRequest.name(), createUserRequest.age()));
+      }
       return HttpResponse.text(
           HttpStatus.CREATED,
           "추가되었습니다."
