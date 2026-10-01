@@ -3,7 +3,6 @@ package user;
 import http.HttpResponse;
 import http.HttpStatus;
 import http.Json;
-import java.sql.SQLException;
 import java.util.List;
 import router.Router;
 
@@ -40,14 +39,7 @@ public class UserRoutes {
     router.post("/users", (request, _) -> {
       CreateUserRequest createUserRequest = Json.read(
           request.body().text(), CreateUserRequest.class);
-
-      try {
-        userRepository.createUser(createUserRequest);
-      } catch (SQLException e) {
-        System.out.println(e.getMessage());
-        return HttpResponse.text(HttpStatus.INTERNAL_SERVER_ERROR, e.getSQLState());
-      }
-
+      userService.addUser(createUserRequest);
       return HttpResponse.text(
           HttpStatus.CREATED,
           "추가되었습니다."

@@ -1,5 +1,7 @@
 package http;
 
+import exception.DataAccessException;
+import exception.NotFoundException;
 import http.exception.BadRequestException;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -9,8 +11,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import router.Router;
-import user.UserService.DataAccessException;
-import user.UserService.NotFoundException;
 
 public class HttpServer {
 
@@ -26,7 +26,6 @@ public class HttpServer {
         handleClient(socket, router);
       };
       executor.execute(job);
-      Integer.toBinaryString(16);
     }
   }
 
