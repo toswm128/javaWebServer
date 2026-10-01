@@ -1,8 +1,8 @@
 package http;
 
-import exception.DataAccessException;
-import exception.NotFoundException;
 import http.exception.BadRequestException;
+import http.exception.DataAccessException;
+import http.exception.NotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.ServerSocket;

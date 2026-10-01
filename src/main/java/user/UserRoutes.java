@@ -1,15 +1,16 @@
 package user;
 
+
 import http.HttpResponse;
 import http.HttpStatus;
 import http.Json;
+import http.exception.BadRequestException;
 import java.util.List;
 import router.Router;
 
 
 public class UserRoutes {
 
-  private static final UserRepository userRepository = new UserRepository();
   private static final UserService userService = new UserService();
 
   public static void register(Router router) {
@@ -32,7 +33,7 @@ public class UserRoutes {
         );
 
       } catch (NumberFormatException e) {
-        return HttpResponse.text(HttpStatus.BAD_REQUEST, "유효하지 않은 값입니다.");
+        throw new BadRequestException("id값이 잘못되었습니다.");
       }
     });
 

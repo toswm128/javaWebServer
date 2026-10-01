@@ -1,7 +1,7 @@
 package user;
 
-import exception.DataAccessException;
-import exception.NotFoundException;
+import http.exception.DataAccessException;
+import http.exception.NotFoundException;
 import java.sql.SQLException;
 import java.util.List;
 
