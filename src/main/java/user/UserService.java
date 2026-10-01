@@ -2,7 +2,6 @@ package user;
 
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Optional;
 
 public class UserService {
 
@@ -10,6 +9,13 @@ public class UserService {
 
     public DataAccessException(Throwable cause) {
       super(cause);
+    }
+  }
+
+  public static class NotFoundException extends RuntimeException {
+
+    public NotFoundException(String message) {
+      super(message);
     }
   }
 
@@ -26,11 +32,10 @@ public class UserService {
     return userList;
   }
 
-  public Optional<User> getUser(int id) {
-    User user;
+  public User getUser(int id) {
     try {
-      user = userRepository.findUserById(id);
-      return Optional.ofNullable(user);
+      return userRepository.findUserById(id)
+          .orElseThrow(() -> new NotFoundException("존재하지 않는 유저입니다."));
     } catch (SQLException e) {
       System.out.println(e.getSQLState());
       throw new DataAccessException(e);

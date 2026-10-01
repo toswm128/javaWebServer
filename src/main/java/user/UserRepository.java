@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class UserRepository {
 
@@ -34,7 +35,7 @@ public class UserRepository {
     return userList;
   }
 
-  public User findUserById(int id) throws SQLException {
+  public Optional<User> findUserById(int id) throws SQLException {
     try (Connection connection = connectDB();
         PreparedStatement preparedStatement = connection.prepareStatement(
             "SELECT * FROM users WHERE id = ?");
@@ -43,12 +44,12 @@ public class UserRepository {
       try (ResultSet resultSet = preparedStatement.executeQuery();) {
 
         if (resultSet.next()) {
-          return new User(resultSet.getInt("id"), resultSet.getString("name"),
-              resultSet.getInt("age"));
+          return Optional.of(new User(resultSet.getInt("id"), resultSet.getString("name"),
+              resultSet.getInt("age")));
         }
       }
     }
-    return null;
+    return Optional.empty();
   }
 
   public void createUser(CreateUserRequest request) throws SQLException {

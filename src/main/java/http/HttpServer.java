@@ -9,6 +9,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import router.Router;
+import user.UserService.DataAccessException;
+import user.UserService.NotFoundException;
 
 public class HttpServer {
 
@@ -24,7 +26,7 @@ public class HttpServer {
         handleClient(socket, router);
       };
       executor.execute(job);
-
+      Integer.toBinaryString(16);
     }
   }
 
@@ -81,6 +83,14 @@ public class HttpServer {
       }
     } catch (BadRequestException e) {
       response = HttpResponse.text(HttpStatus.BAD_REQUEST, e.getMessage());
+    } catch (NotFoundException e) {
+      response = HttpResponse.text(
+          HttpStatus.NOT_FOUND, e.getMessage()
+      );
+    } catch (DataAccessException e) {
+      response = HttpResponse.text(
+          HttpStatus.INTERNAL_SERVER_ERROR, "예기치 않은 오류"
+      );
     } catch (Exception e) {
       response = HttpResponse.text(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error");
     }

@@ -5,9 +5,7 @@ import http.HttpStatus;
 import http.Json;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Optional;
 import router.Router;
-import user.UserService.DataAccessException;
 
 
 public class UserRoutes {
@@ -17,31 +15,18 @@ public class UserRoutes {
 
   public static void register(Router router) {
     router.get("/users", (request, __) -> {
-      try {
-        List<User> userList = userService.getUsers();
-        String json = Json.write(userList);
-        return HttpResponse.text(
-            HttpStatus.OK,
-            json
-        );
-
-
-      } catch (DataAccessException e) {
-        return HttpResponse.text(
-            HttpStatus.INTERNAL_SERVER_ERROR, "예기치 않은 오류"
-        );
-      }
+      List<User> userList = userService.getUsers();
+      String json = Json.write(userList);
+      return HttpResponse.text(
+          HttpStatus.OK,
+          json
+      );
     });
 
     router.get("/users/{id}", (request, patchValue) -> {
       try {
-        Optional<User> user = userService.getUser(Integer.parseInt(patchValue.get("id")));
-        if (user.isEmpty()) {
-          return HttpResponse.text(
-              HttpStatus.NOT_FOUND, "존재하지 않는 유저입니다."
-          );
-        }
-        String json = Json.write(user.get());
+        User user = userService.getUser(Integer.parseInt(patchValue.get("id")));
+        String json = Json.write(user);
         return HttpResponse.text(
             HttpStatus.OK,
             json
@@ -49,13 +34,7 @@ public class UserRoutes {
 
       } catch (NumberFormatException e) {
         return HttpResponse.text(HttpStatus.BAD_REQUEST, "유효하지 않은 값입니다.");
-      } catch (DataAccessException e) {
-        return HttpResponse.text(
-            HttpStatus.INTERNAL_SERVER_ERROR, "예기치 않은 오류"
-        );
       }
-
-
     });
 
     router.post("/users", (request, _) -> {
