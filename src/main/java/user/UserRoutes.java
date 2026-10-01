@@ -11,11 +11,15 @@ import router.Router;
 
 public class UserRoutes {
 
-  private static final UserService userService = new UserService();
+  private final UserService userService;
 
-  public static void register(Router router) {
+  public UserRoutes(UserService userService) {
+    this.userService = userService;
+  }
+
+  public void register(Router router) {
     router.get("/users", (request, __) -> {
-      List<User> userList = userService.getUsers();
+      List<User> userList = this.userService.getUsers();
       String json = Json.write(userList);
       return HttpResponse.text(
           HttpStatus.OK,
